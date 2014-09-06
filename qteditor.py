@@ -31,11 +31,29 @@ class Main(QtGui.QMainWindow):
         self.saveAction.setShortcut("Ctrl+S")
         self.saveAction.triggered.connect(self.save)
 
+        # To print the file
+        self.printAction = QtGui.QAction(QtGui.QIcon("icons/print.png"),
+                                         "Print", self)
+        self.printAction.setStatusTip("Print the file")
+        self.printAction.setShortcut("Ctrl+P")
+        self.printAction.triggered.connect(self.prnt)
+
+        # Print preview a file
+        self.previewAction = QtGui.QAction(QtGui.QIcon("icons/preview.png"),
+                                           "Print Preview", self)
+        self.printAction.setStatusTip("Print preview" + self.fileName)
+        self.previewAction.setShortcut("Ctrl+Shift+P")
+        self.previewAction.triggered.connect(self.preview)
+
         self.toolBar = self.addToolBar("Options")
 
         self.toolBar.addAction(self.newAction)
         self.toolBar.addAction(self.openAction)
         self.toolBar.addAction(self.saveAction)
+
+        self.toolBar.addSeparator()
+        self.toolBar.addAction(self.printAction)
+        self.toolBar.addAction(self.previewAction)
 
         self.toolBar.addSeparator()
 
@@ -53,6 +71,8 @@ class Main(QtGui.QMainWindow):
         file.addAction(self.newAction)
         file.addAction(self.openAction)
         file.addAction(self.saveAction)
+        file.addAction(self.printAction)
+        file.addAction(self.previewAction)
 
     def initUI(self):
         self.text = QtGui.QTextEdit(self)
@@ -94,6 +114,21 @@ class Main(QtGui.QMainWindow):
         with open(self.fileName, "wt") as fil:
             fil.write(self.text.toHtml())
 
+    def preview(self):
+        # Open preview dialog
+        preview = QtGui.QPrintPreviewDialog()
+
+        # If a print is requested, open print dialog
+        preview.paintRequested.connect(lambda p: self.text.print_(p))
+
+        preview.exec_()
+
+    def prnt(self):
+        # Open print dialog
+        dialog = QtGui.QPrintDialog()
+
+        if dialog.exec_() == QtGui.QDialog.Accepted:
+            self.text.document().print_(dialog.printer())
 
 
 def main():
