@@ -152,17 +152,31 @@ class Main(QtGui.QMainWindow):
         self.text = QtGui.QTextEdit(self)
         self.setCentralWidget(self.text)
 
+        # Sets tab stop. Should be 8 spaces which was equal to 33 px in
+        # tutorial
+        self.text.setTabStopWidth(33)
+
+        # To keep a track of current line and column number
+        self.text.cursorPositionChanged.connect(self.cursorPosition)
+        self.setWindowIcon(QtGui.QIcon("icons/icon.png"))
+
         self.initToolBar()
         self.initFormatBar()
         self.initMenuBar()
 
-        # Initialize status bar for the window. It's different from tutorial.
-        # Not used self.statusbar. Directly initialized self.statusBar()
-        self.statusBar()
+        # Initialize status bar for the window.
+        self.statusBar = self.statusBar()
 
         """x and y coordinates on the screen, width and height"""
         self.setGeometry(100, 100, 1030, 800)
         self.setWindowTitle("qteditor")
+
+    def cursorPosition(self):
+        cursor = self.text.textCursor()
+        line = cursor.blockNumber() + 1
+        col = cursor.columnNumber()
+
+        self.statusBar.showMessage("Line: {} | Column: {}".format(line, col))
 
     def new(self):
         spawn = Main(self)
@@ -182,7 +196,7 @@ class Main(QtGui.QMainWindow):
             self.fileName = QtGui.QFileDialog.getSaveFileName(self, "Save "
                                                               "File")
         # Append extension if none exists
-        if not self.fileName.endswith(".writer"):
+        if not self.fileName.endsWith(".writer"):
             self.fileName += ".writer"
 
         with open(self.fileName, "wt") as fil:
