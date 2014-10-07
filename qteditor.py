@@ -124,32 +124,95 @@ class Main(QtGui.QMainWindow):
         self.addToolBarBreak()
 
     def initFormatBar(self):
+        fontBox = QtGui.QFontComboBox(self)
+        fontBox.currentFontChanged.connect(lambda font:
+                                           self.text.setCurrentFont(font))
+
+        fontSize = QtGui.QSpinBox(self)
+
+        # Display "pt" after each value
+        fontSize.setSuffix(" pt")
+
+        fontSize.valueChanged.connect(lambda size:
+                                      self.text.setFontPointSize(size))
+
+        fontSize.setValue(12)
+
+        fontColor = QtGui.QAction(QtGui.QIcon("icons/font-color.png"), "Change"
+                                              " Font Color", self)
+        fontColor.triggered.connect(self.fontColorChanged)
+
+        backColor = QtGui.QAction(QtGui.QIcon("icons/highlight.png"), "Change "
+                                  "Backgroubd Color", self)
+        backColor.triggered.connect(self.highlight)
+
+        boldAction = QtGui.QAction(QtGui.QIcon("icons/bold.png"), "Bold", self)
+        boldAction.triggered.connect(self.bold)
+
+        italicAction = QtGui.QAction(QtGui.QIcon("icons/italic.png"), "Italic",
+                                     self)
+        italicAction.triggered.connect(self.italic)
+
+        underlAction = QtGui.QAction(QtGui.QIcon("icons/underline.png"),
+                                     "Underline", self)
+        underlAction.triggered.connect(self.underline)
+
+        strikeAction = QtGui.QAction(QtGui.QIcon("icons/strike.png"),
+                                     "Strikethrough", self)
+        strikeAction.triggered.connect(self.strike)
+
+        superAction = QtGui.QAction(QtGui.QIcon("icons/superscript.png"),
+                                    "Superscript", self)
+        superAction.triggered.connect(self.superScript)
+
+        subAction = QtGui.QAction(QtGui.QIcon("icons/subscript.png"),
+                                  "Subscript", self)
+        subAction.triggered.connect(self.subScript)
+
         self.formatBar = self.addToolBar("Format")
+
+        self.formatBar.addWidget(fontBox)
+        self.formatBar.addWidget(fontSize)
+
+        self.formatBar.addSeparator()
+
+        self.formatBar.addAction(fontColor)
+        self.formatBar.addAction(backColor)
+
+        self.formatBar.addSeparator()
+
+        self.formatBar.addAction(boldAction)
+        self.formatBar.addAction(italicAction)
+        self.formatBar.addAction(underlAction)
+        self.formatBar.addAction(strikeAction)
+        self.formatBar.addAction(superAction)
+        self.formatBar.addAction(subAction)
 
     def initMenuBar(self):
         menuBar = self.menuBar()
-        file = menuBar.addMenu("File")
-        edit = menuBar.addMenu("Edit")
-        view = menuBar.addMenu("View")
-        insert = menuBar.addMenu("Insert")
+        file_menu = menuBar.addMenu("File")
+        edit_menu = menuBar.addMenu("Edit")
+        view_menu = menuBar.addMenu("View")
+        insert_menu = menuBar.addMenu("Insert")
 
-        file.addAction(self.newAction)
-        file.addAction(self.openAction)
-        file.addAction(self.saveAction)
-        file.addAction(self.printAction)
-        file.addAction(self.previewAction)
+        file_menu.addAction(self.newAction)
+        file_menu.addAction(self.openAction)
+        file_menu.addAction(self.saveAction)
+        file_menu.addAction(self.printAction)
+        file_menu.addAction(self.previewAction)
 
-        edit.addAction(self.undoAction)
-        edit.addAction(self.redoAction)
-        edit.addAction(self.cutAction)
-        edit.addAction(self.copyAction)
-        edit.addAction(self.pasteAction)
+        edit_menu.addAction(self.undoAction)
+        edit_menu.addAction(self.redoAction)
+        edit_menu.addAction(self.cutAction)
+        edit_menu.addAction(self.copyAction)
+        edit_menu.addAction(self.pasteAction)
 
-        insert.addAction(self.bulletAction)
-        insert.addAction(self.numberedAction)
+        insert_menu.addAction(self.bulletAction)
+        insert_menu.addAction(self.numberedAction)
 
     def initUI(self):
         self.text = QtGui.QTextEdit(self)
+        self.text.setFontPointSize(12)
         self.setCentralWidget(self.text)
 
         # Sets tab stop. Should be 8 spaces which was equal to 33 px in
@@ -225,6 +288,64 @@ class Main(QtGui.QMainWindow):
     def numberList(self):
         cursor = self.text.textCursor()
         cursor.insertList(QtGui.QTextListFormat.ListDecimal)
+
+    def fontFamily(self, font):
+        self.text.setCurrentFont(font)
+
+    def fontSize(self, fontSize):
+        self.text.setFontPointSize(int(fontSize))
+
+    def fontColorChanged(self):
+        color = QtGui.QColorDialog.getColor()
+        self.text.setTextColor(color)
+
+    def highlight(self):
+        color = QtGui.QColorDialog.getColor()
+        self.text.setTextBackgroundColor(color)
+
+    def bold(self):
+        if self.text.fontWeight() == QtGui.QFont.Bold:
+            self.text.setFontWeight(QtGui.QFont.Normal)
+        else:
+            self.text.setFontWeight(QtGui.QFont.Bold)
+
+    def italic(self):
+        state = self.text.fontItalic()
+        self.text.setFontItalic(not state)
+
+    def underline(self):
+        state = self.text.fontUnderline()
+        self.text.setFontUnderline(not state)
+
+    def strike(self):
+        # Grab current text format
+        fmt = self.text.currentCharFormat()
+
+        # Set the fontstrikeOut property property to its opposite
+        fmt.setFontStrikeOut(not fmt.fontStrikeOut())
+
+        # Set the current text format
+        self.text.setCurrentCharFormat(fmt)
+
+    def superScript(self):
+        fmt = self.text.currentCharFormat()
+        align = fmt.verticalAlignment()
+        if align == QtGui.QTextCharFormat.AlignNormal:
+            fmt.setVerticalAlignment(QtGui.QTextCharFormat.AlignSuperScript)
+        else:
+            fmt.setVerticalAlignment(QtGui.QTextCharFormat.AlignNormal)
+        self.text.setCurrentCharFormat(fmt)
+
+    def subScript(self):
+        fmt = self.text.currentCharFormat()
+        align = fmt.verticalAlignment()
+
+        if align == QtGui.QTextCharFormat.AlignNormal:
+            fmt.setVerticalAlignment(QtGui.QTextCharFormat.AlignSubScript)
+        else:
+            fmt.setVerticalAlignment(QtGui.QTextCharFormat.AlignNormal)
+        self.text.setCurrentCharFormat(fmt)
+
 
 def main():
     app = QtGui.QApplication(sys.argv)
