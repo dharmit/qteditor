@@ -169,6 +169,32 @@ class Main(QtGui.QMainWindow):
                                   "Subscript", self)
         subAction.triggered.connect(self.subScript)
 
+        alignLeft = QtGui.QAction(QtGui.QIcon("icons/align-left.png"), "Align"
+                                  " Left", self)
+        alignLeft.triggered.connect(self.alignLeft)
+
+        alignRight = QtGui.QAction(QtGui.QIcon("icons/align-right.png"),
+                                   "Align Right", self)
+        alignRight.triggered.connect(self.alignRight)
+
+        alignCenter = QtGui.QAction(QtGui.QIcon("icons/align-center.png"),
+                                    "Align Center", self)
+        alignCenter.triggered.connect(self.alignCenter)
+
+        alignJustify = QtGui.QAction(QtGui.QIcon("icons/align-justify.png"),
+                                     "Align Justify", self)
+        alignJustify.triggered.connect(self.alignJustify)
+
+        indentAction = QtGui.QAction(QtGui.QIcon("icons/indent.png"), "Indent "
+                                     "Area", self)
+        indentAction.setShortcut("Ctrl+Tab")
+        indentAction.triggered.connect(self.indent)
+
+        dedentAction = QtGui.QAction(QtGui.QIcon("icons/dedent.png"), "Dedent "
+                                     "Area", self)
+        dedentAction.setShortcut("Shift+Tab")
+        dedentAction.triggered.connect(self.dedent)
+
         self.formatBar = self.addToolBar("Format")
 
         self.formatBar.addWidget(fontBox)
@@ -187,6 +213,12 @@ class Main(QtGui.QMainWindow):
         self.formatBar.addAction(strikeAction)
         self.formatBar.addAction(superAction)
         self.formatBar.addAction(subAction)
+        self.formatBar.addAction(alignLeft)
+        self.formatBar.addAction(alignCenter)
+        self.formatBar.addAction(alignRight)
+        self.formatBar.addAction(alignJustify)
+        self.formatBar.addAction(indentAction)
+        self.formatBar.addAction(dedentAction)
 
     def initMenuBar(self):
         menuBar = self.menuBar()
@@ -209,6 +241,19 @@ class Main(QtGui.QMainWindow):
 
         insert_menu.addAction(self.bulletAction)
         insert_menu.addAction(self.numberedAction)
+
+        toolBarAction = QtGui.QAction("Toggle Toolbar", self)
+        toolBarAction.triggered.connect(self.toggleToolbar)
+
+        formatBarAction = QtGui.QAction("Toggle Formatbar", self)
+        formatBarAction.triggered.connect(self.toggleFormatbar)
+
+        statusBarAction = QtGui.QAction("Toggle Statusbar", self)
+        statusBarAction.triggered.connect(self.toggleStatusbar)
+
+        view_menu.addAction(toolBarAction)
+        view_menu.addAction(formatBarAction)
+        view_menu.addAction(statusBarAction)
 
     def initUI(self):
         self.text = QtGui.QTextEdit(self)
@@ -345,6 +390,85 @@ class Main(QtGui.QMainWindow):
         else:
             fmt.setVerticalAlignment(QtGui.QTextCharFormat.AlignNormal)
         self.text.setCurrentCharFormat(fmt)
+
+    def alignLeft(self):
+        self.text.setAlignment(Qt.AlignLeft)
+
+    def alignRight(self):
+        self.text.setAlignment(Qt.AlignRight)
+
+    def alignCenter(self):
+        self.text.setAlignment(Qt.AlignCenter)
+
+    def alignJustify(self):
+        self.text.setAlignment(Qt.AlignJustify)
+
+    def indent(self):
+        cursor = self.text.textCursor()
+
+        if cursor.hasSelection():
+            # Store the current line/block number
+            temp = cursor.blockNumber()
+            # Move to the selection's last line
+            cursor.setPosition(cursor.selectionEnd())
+            # Calculate range of selection
+            diff = cursor.blockNumber() - temp
+            # Iterate over lines
+            for n in range(diff+1):
+                # Move to start of each line
+                cursor.movePosition(QtGui.QTextCursor.StartOfLine)
+                # Insert tabbing
+                cursor.insertText("\t")
+                # And move back up
+                cursor.movePosition(QtGui.QTextCursor.Up)
+        # If there's no selection, just insert a tab.
+        else:
+            cursor.insertText("\t")
+
+    def dedent(self):
+        cursor = self.text.textCursor()
+
+        if cursor.hasSelection():
+            # Store the current line/block number
+            temp = cursor.blockNumber()
+            # Move to selection's last line
+            cursor.setPosition(cursor.selectionEnd())
+            # Calculate range of selection
+            diff = cursor.blockNumber() - temp
+
+            # Iterate over lines
+            for n in range(diff+1):
+                self.handleDedent(cursor)
+                # Move up
+                cursor.movePosition(QtGui.QTextCursor.Up)
+        else:
+            self.handleDedent(cursor)
+
+    def handleDedent(self, cursor):
+        cursor.movePosition(QtGui.QTextCursor.StartOfLine)
+        # Grab the current line
+        line = cursor.block().text()
+
+        # If line starts with a tab character, delete it.
+        if line.startsWith("\t"):
+            cursor.deleteChar()
+        else:
+            for char in line[:8]:
+                if char != " ":
+                    break
+                cursor.deleteChar()
+
+    def toggleToolbar(self):
+        state = self.toolBar.isVisible()
+        self.toolBar.setVisible(not state)
+
+    def toggleFormatbar(self):
+        state = self.formatBar.isVisible()
+        self.formatBar.setVisible(not state)
+
+    def toggleStatusbar(self):
+        state = self.statusBar.isVisible()
+        self.statusBar.setVisible(not state)
 
 
 def main():
